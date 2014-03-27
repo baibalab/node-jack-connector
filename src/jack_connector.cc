@@ -335,8 +335,8 @@ Handle<Value> deactivateSync(const Arguments &args)
  *   } else {
  *      console.log("Ports are disconnected...");
  *   }
+ * @returns {v8::Boolean} result True - ports are connected, false - ports are disconnected
  */
- 
 Handle<Value> checkPortSync(const Arguments &args)
 {
     HandleScope scope;
@@ -351,16 +351,13 @@ Handle<Value> checkPortSync(const Arguments &args)
     String::AsciiValue dst_port_name(args[1]->ToString());
     jack_port_t *dst_port = jack_port_by_name(client, *dst_port_name);
     if (! dst_port) THROW_ERR("Non existing destination port");
-
+        
     if (check_port_connection(*src_port_name, *dst_port_name)) {
         return scope.Close(Boolean::New(true));
     } else {
         return scope.Close(Boolean::New(false));
     }
 }
-
-
-
 
 /**
  * Connect port to port
