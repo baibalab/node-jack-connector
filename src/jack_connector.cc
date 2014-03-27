@@ -319,6 +319,49 @@ Handle<Value> deactivateSync(const Arguments &args)
     return scope.Close(Undefined());
 }
 
+
+/**
+ * Check if ports are connected
+ *
+ * @public
+ * @param {v8::String} sourcePort Full name of source port
+ * @param {v8::String} destinationPort Full name of destination port
+ * @example
+ *   var jackConnector = require('jack-connector');
+ *   jackConnector.openClientSync('JACK_connector_client_name');
+ *   jackConnector.activateSync();
+ *   if(jackConnector.checkPortSync('system:capture_1', 'system:playback_1')){
+ *      console.log("Ports are connected!"); 
+ *   } else {
+ *      console.log("Ports are disconnected...");
+ *   }
+ */
+ 
+Handle<Value> checkPortSync(const Arguments &args)
+{
+    HandleScope scope;
+    if (client == 0) THROW_ERR(ERR_MSG_NEED_TO_OPEN_JACK_CLIENT);
+
+    if (! client_active) THROW_ERR("JACK-client is not active");
+
+    String::AsciiValue src_port_name(args[0]->ToString());
+    jack_port_t *src_port = jack_port_by_name(client, *src_port_name);
+    if (! src_port) THROW_ERR("Non existing source port");
+
+    String::AsciiValue dst_port_name(args[1]->ToString());
+    jack_port_t *dst_port = jack_port_by_name(client, *dst_port_name);
+    if (! dst_port) THROW_ERR("Non existing destination port");
+
+    if (check_port_connection(*src_port_name, *dst_port_name)) {
+        return scope.Close(Boolean::New(true));
+    } else {
+        return scope.Close(Boolean::New(false));
+    }
+}
+
+
+
+
 /**
  * Connect port to port
  *
@@ -719,6 +762,8 @@ void init(Handle<Object> target)
     target->Set( String::NewSymbol("deactivateSync"),
                  FunctionTemplate::New(deactivateSync)->GetFunction() );
 
+    target->Set( String::NewSymbol("checkPortSync"),
+                 FunctionTemplate::New(checkPortSync)->GetFunction() );
 
     target->Set( String::NewSymbol("connectPortSync"),
                  FunctionTemplate::New(connectPortSync)->GetFunction() );
